@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/StrikeAtZeroHour_Holiday-Visualizer.github.io/static/css/main.30fa3495.css",
-    "main.js": "/StrikeAtZeroHour_Holiday-Visualizer.github.io/static/js/main.18ebfc15.js",
-    "static/js/453.f3782e89.chunk.js": "/StrikeAtZeroHour_Holiday-Visualizer.github.io/static/js/453.f3782e89.chunk.js",
-    "index.html": "/StrikeAtZeroHour_Holiday-Visualizer.github.io/index.html",
-    "main.30fa3495.css.map": "/StrikeAtZeroHour_Holiday-Visualizer.github.io/static/css/main.30fa3495.css.map",
-    "main.18ebfc15.js.map": "/StrikeAtZeroHour_Holiday-Visualizer.github.io/static/js/main.18ebfc15.js.map",
-    "453.f3782e89.chunk.js.map": "/StrikeAtZeroHour_Holiday-Visualizer.github.io/static/js/453.f3782e89.chunk.js.map"
+    "main.css": "/Holiday-Visualizer.github.io/static/css/main.30fa3495.css",
+    "main.js": "/Holiday-Visualizer.github.io/static/js/main.358d708d.js",
+    "static/js/453.f3782e89.chunk.js": "/Holiday-Visualizer.github.io/static/js/453.f3782e89.chunk.js",
+    "index.html": "/Holiday-Visualizer.github.io/index.html",
+    "main.30fa3495.css.map": "/Holiday-Visualizer.github.io/static/css/main.30fa3495.css.map",
+    "main.358d708d.js.map": "/Holiday-Visualizer.github.io/static/js/main.358d708d.js.map",
+    "453.f3782e89.chunk.js.map": "/Holiday-Visualizer.github.io/static/js/453.f3782e89.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.30fa3495.css",
-    "static/js/main.18ebfc15.js"
+    "static/js/main.358d708d.js"
   ]
 }
