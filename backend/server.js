@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { translate } = require('@vitalets/google-translate-api');
 const app = express();
-
+const BASE_DELAY = 4000; // 基礎延遲 4 秒
 // 允許跨網域請求 (讓你的 React 前端可以連過來)
 app.use(cors());
 // 允許解析 JSON 格式的請求主體 (Body)
@@ -11,6 +11,9 @@ app.use(express.json());
 // 建立一個記憶體快取物件，格式如：{ "New Year's Day": "元旦" }
 const translationCache = {};
 
+function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
 // 建立翻譯 API 路由
 app.post('/api/translate', async (req, res) => {
   const { text } = req.body;
@@ -20,12 +23,13 @@ app.post('/api/translate', async (req, res) => {
   }
 
   console.log(`收到翻譯請求: [${text}]`);
-
+  
   // 檢查快取：如果以前翻譯過，直接從記憶體拿出來回傳
   if (translationCache[text]) {
     console.log(`✨ 快取命中! 直接回傳: ${translationCache[text]}`);
     return res.json({ translatedText: translationCache[text] });
   }
+  await delay(4000);//防止 Google 翻譯 API 的速率限制，對每個請求加上固定延遲
 
   try {
     // 呼叫 Google 翻譯 API，將目標語言設為繁體中文 (zh-TW)
