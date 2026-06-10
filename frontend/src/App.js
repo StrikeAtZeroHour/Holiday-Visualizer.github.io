@@ -13,6 +13,8 @@ const MONTHS = [
   { label: "Jul", day: 183 }, { label: "Aug", day: 214 }, { label: "Sep", day: 245 },
   { label: "Oct", day: 275 }, { label: "Nov", day: 306 }, { label: "Dec", day: 336 }
 ];
+// 🌟 設定後端網址（本地測試用 localhost，部署後記得改成 Render 提供給你的後端網址）
+const BACKEND_URL = 'http://localhost:5000';
 
 function getDayOfYear(dateString) {
   const date = new Date(dateString);
@@ -50,7 +52,22 @@ async function fetchHolidayInfo(holidayName,countryCode) {
     return null;
   }
 }
-
+// 🌟 新增：向後端發送翻譯請求的輔助函式
+async function requestTranslation(text) {
+  if (!text || text === "unknown festival") return text;
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    return data.translatedText;
+  } catch (e) {
+    console.error("後端翻譯連線失敗:", e);
+    return text; // 萬一後端掛了，至少顯示原本的外文
+  }
+}
 export default function App() {
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,9 +99,23 @@ export default function App() {
 
   const handleMouseEnter = async (fest) => {
     setHoveredHolidayIndex(fest.index);
+    
     if (!holidayDetails[fest.index]) {
-      const info = await fetchHolidayInfo(fest.name,fest.countryCode);
-      setHolidayDetails(prev => ({ ...prev, [fest.index]: info || { imageUrl: null, summary: "No detailed information available" } }));
+      // 1. 同時啟動：查維基百科（內含內文翻譯） 與 節日名稱翻譯
+      const [info, zhFestivalName] = await Promise.all([
+        fetchHolidayInfo(fest.name, fest.countryCode),
+        requestTranslation(fest.name)
+      ]);
+
+      // 2. 存入快取
+      setHolidayDetails(prev => ({ 
+        ...prev, 
+        [fest.index]: {
+          imageUrl: info?.imageUrl || null,
+          summary: info?.summary || "暫無詳細中文資訊介紹",
+          translatedName: zhFestivalName || fest.name
+        } 
+      }));
     }
   };
 
@@ -101,6 +132,8 @@ export default function App() {
           {holidays.map((fest) => {
             const countryCfg = COUNTRIES.find(c => c.code === fest.countryCode);
             const x = (fest.dayOfYear / 365) * timelineWidth;
+            // 🌟 檢查快取內有沒有翻譯好的名稱，沒有就先顯示原始名稱
+            const displayName = holidayDetails[fest.index]?.translatedName || fest.name;
             return (
               <div key={fest.index} className="holiday-wrapper"
                 style={{ left: `${x}px`, top: `${countryCfg.height}px`, '--dot-color': countryCfg.color }}
@@ -111,10 +144,10 @@ export default function App() {
                 {hoveredHolidayIndex === fest.index && (
                   <div className="holiday-card">
                     {holidayDetails[fest.index]?.imageUrl ? (
-                      <img src={holidayDetails[fest.index].imageUrl} alt={fest.name} />
+                      <img src={holidayDetails[fest.index].imageUrl} alt={displayName} />
                     ) : <div className="no-image">No related image</div>}
                     <div style={{ fontSize: '11px', color: '#94a3b8' }}>{countryCfg.name} | {fest.date.substring(5).replace('-', '/')}</div>
-                    <div style={{ fontSize: '14px', fontWeight: 'bold', margin: '4px 0' }}>{fest.name}</div>
+                    <div style={{ fontSize: '14px', fontWeight: 'bold', margin: '4px 0' }}>{displayName}</div>
                     <p style={{ fontSize: '10px', color: '#cbd5e1', margin: 0 }}>{holidayDetails[fest.index]?.summary || "Loading..."}</p>
                   </div>
                 )}
