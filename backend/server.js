@@ -1,19 +1,24 @@
 const express = require('express');
 const cors = require('cors');
-const { translate } = require('@vitalets/google-translate-api');
+const { TranslationServiceClient } = require('@google-cloud/translate');
 const app = express();
-const BASE_DELAY = 4000; // 基礎延遲 4 秒
-// 允許跨網域請求 (讓你的 React 前端可以連過來)
+
+// 允許跨網域請求
 app.use(cors());
-// 允許解析 JSON 格式的請求主體 (Body)
 app.use(express.json());
 
-// 建立一個記憶體快取物件，格式如：{ "New Year's Day": "元旦" }
+// 建立記憶體快取
 const translationCache = {};
 
-function delay(time) {
-  return new Promise(resolve => setTimeout(resolve, time));
-}
+// 初始化 Google Translate 官方客戶端
+// 注意：API Key 需要設定在環境變數中
+const translationClient = new TranslationServiceClient({
+  key: process.env.GOOGLE_API_KEY,  // Render 環境變數會自動載入
+});
+
+const projectId = process.env.GOOGLE_PROJECT_ID; // 需要你的 Project ID
+const location = 'global';
+
 // 建立翻譯 API 路由
 app.post('/api/translate', async (req, res) => {
   const { text } = req.body;
@@ -23,20 +28,27 @@ app.post('/api/translate', async (req, res) => {
   }
 
   console.log(`收到翻譯請求: [${text}]`);
-  
-  // 檢查快取：如果以前翻譯過，直接從記憶體拿出來回傳
+
+  // 檢查快取
   if (translationCache[text]) {
     console.log(`✨ 快取命中! 直接回傳: ${translationCache[text]}`);
     return res.json({ translatedText: translationCache[text] });
   }
-  await delay(4000);//防止 Google 翻譯 API 的速率限制，對每個請求加上固定延遲
 
   try {
-    // 呼叫 Google 翻譯 API，將目標語言設為繁體中文 (zh-TW)
-    const result = await translate(text, { to: 'zh-TW' });
-    const translatedText = result.text;
+    // 使用官方 API 進行翻譯
+    const request = {
+      parent: `projects/${projectId}/locations/${location}`,
+      contents: [text],
+      mimeType: 'text/plain',
+      sourceLanguageCode: 'auto',
+      targetLanguageCode: 'zh-TW',
+    };
 
-    // 將結果存入快取，供下次使用
+    const [response] = await translationClient.translateText(request);
+    const translatedText = response.translations[0].translatedText;
+
+    // 存入快取
     translationCache[text] = translatedText;
 
     console.log(`🌐 翻譯成功: [${text}] -> [${translatedText}]`);
@@ -44,15 +56,14 @@ app.post('/api/translate', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Google 翻譯 API 發生錯誤:', error);
-    // 萬一 API 壞了，至少把原文還給前端，確保網頁不會整個掛掉崩潰
+    // 失敗時回傳原文
     res.json({ translatedText: text });
   }
 });
 
-// Render 會自動分配 PORT，若在本機開發則預設使用 5000
+// Render 會自動分配 PORT
 const PORT = process.env.PORT || 5000;
 
-// 綁定 0.0.0.0 是為了讓 Render 的反向代理能正確存取
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 翻譯後端伺服器已成功啟動，正運行於 Port ${PORT}`);
 });
