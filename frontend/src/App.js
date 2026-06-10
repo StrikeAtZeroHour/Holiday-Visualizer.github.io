@@ -13,8 +13,7 @@ const MONTHS = [
   { label: "Jul", day: 183 }, { label: "Aug", day: 214 }, { label: "Sep", day: 245 },
   { label: "Oct", day: 275 }, { label: "Nov", day: 306 }, { label: "Dec", day: 336 }
 ];
-// 🌟 設定後端網址（本地測試用 localhost，部署後記得改成 Render 提供給你的後端網址）
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = 'https://holiday-visualizer-translate-api-server.onrender.com';
 
 function getDayOfYear(dateString) {
   const date = new Date(dateString);
